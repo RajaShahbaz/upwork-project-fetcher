@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
 class UserController extends Controller
 {
 
@@ -70,6 +72,26 @@ function login(Request $request)
     $response["user"] = $user;
     return $response;
 }
+public function sendResetLinkEmail(Request $request)
+{
+    try {
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'email' => 'required|email',
+        ]);
+    } catch (ValidationException $e) {
+        return response()->json(['error' => $e->getMessage()], 400);
+    }
+    $status = Password::sendResetLink(
+        $request->only('email')
+    );
+    $response["success"] = true;
+    $response["message"] = "Mail Sent Successfully";
+    return $response;
+    // return $status === Password::RESET_LINK_SENT
+    //             ? back()->with('status', trans($status))
+    //             : back()->withErrors(['email' => trans($status)]);
+}
 
     /**
      * Display a listing of the resource.
@@ -112,18 +134,27 @@ function login(Request $request)
     return $response;
     }
 
-    
+
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
-        //
+        $user=User::find(auth('sanctum')->user()->id);
+        $user->email=$request->email ?? $user->email;
+        $user->phone=$request->phone ?? $user->phone;
+        $user->name=$request->name ?? $user->name;
+        $user->subcription_type=$request->subcription_type ?? $user->subcription_type;
+        $user->save();
+        $response["success"] = true;
+        $response["message"] = "profile updated successfully";
+        $response["data"] = $user;
+        return $response;
+
     }
 
     /**
