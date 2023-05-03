@@ -45,4 +45,8 @@ class User extends Authenticatable
 {
     return $this->belongsToMany(Keyword::class,'user_keywords');
 }
+public function proposals()
+{
+    return $this->hasMany(Proposal::class);
+}
 }
